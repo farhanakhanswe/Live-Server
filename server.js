@@ -29,17 +29,7 @@ const contentHeaderMap = new Map()
     .set(".mp4", "video/mp4")
     .set(".webm", "video/webm")
 
-const server = http.createServer((request, response) => {
-    console.log(request.url);
-    if(request.url === "/"){
-        setContentHeader(htmlExt, response);
-        serveFile("/index.html", response);
-    }else{
-        const fileFormat = path.extname(request.url);
-        setContentHeader(fileFormat, response);
-        serveFile(request.url, response);
-    } 
-});
+// functions start here
 
 const setContentHeader = (ext, response) => {
     response.setHeader("Content-Type", contentHeaderMap.get(ext));
@@ -56,7 +46,25 @@ const serveFile = (filename, response) => {
     });
 }
 
+const watchFiles = () => {
+    fs.watch("public", (eventType, filename) => {
+        console.log(eventType, filename);
+    });
+}
+
+const server = http.createServer((request, response) => {
+    console.log(request.url);
+    if(request.url === "/"){
+        setContentHeader(htmlExt, response);
+        serveFile("/index.html", response);
+    }else{
+        const fileFormat = path.extname(request.url);
+        setContentHeader(fileFormat, response);
+        serveFile(request.url, response);
+    } 
+});
 
 server.listen(port, () => {
+    watchFiles();
     console.log(`Server running on port ${port}`);
 });
