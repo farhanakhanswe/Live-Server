@@ -1,16 +1,17 @@
 const http = require("http");
 const fs = require("fs");
 const config = require("./config.json");
-const port = config.port;
 const path = require("path");
-const htmlExt = ".html";
-const contentHeaders = require("./content-headers.json");
-const contentHeaderMap = new Map(Object.entries(contentHeaders));
+const mimeTypes = require("./mime-types.json");
+
+const htmlExtension = ".html";
+const fileNotFoundStatusCode = 404;
+const fileNotFoundMsg = "File not found!";
 
 // functions start here
 
 const setContentHeader = (ext, response) => {
-    response.setHeader("Content-Type", contentHeaderMap.get(ext));
+    response.setHeader("Content-Type", mimeTypes[ext]);
 }
 
 const serveFile = (filename, response) => {
@@ -18,8 +19,8 @@ const serveFile = (filename, response) => {
         if(!error){
             response.end(data); 
         }else{
-            response.statusCode = 404;
-            response.end("File not found!");
+            response.statusCode = fileNotFoundStatusCode;
+            response.end(fileNotFoundMsg);
         }
     });
 }
@@ -33,7 +34,7 @@ const watchFiles = () => {
 const server = http.createServer((request, response) => {
     console.log(request.url);
     if(request.url === "/"){
-        setContentHeader(htmlExt, response);
+        setContentHeader(htmlExtension, response);
         serveFile("/index.html", response);
     }else{
         const fileFormat = path.extname(request.url);
@@ -42,7 +43,7 @@ const server = http.createServer((request, response) => {
     } 
 });
 
-server.listen(port, () => {
+server.listen(config.port, () => {
     watchFiles();
-    console.log(`Server running on port ${port}`);
+    console.log(`Server running on port ${config.port}`);
 });
