@@ -3,31 +3,8 @@ const fs = require("fs");
 const port = 3000;
 const path = require("path");
 const htmlExt = ".html";
-const contentHeaderMap = new Map()
-    .set(".html", "text/html")
-    .set(".css", "text/css")
-    .set(".js", "text/javascript")
-    .set(".csv", "text/csv")
-    .set(".txt", "text/plain")
-
-    .set(".png", "image/png")
-    .set(".jpg", "image/jpeg")
-    .set(".jpeg", "image/jpeg")
-    .set(".gif", "image/gif")
-    .set(".svg", "image/svg+xml")
-    .set(".webp", "image/webp")
-    .set(".ico", "image/x-icon")
-   
-    .set(".json", "application/json")
-    .set(".xml", "application/xml")
-    .set(".pdf", "application/pdf")
-
-    .set(".mp3", "audio/mpeg")
-    .set(".mpeg", "audio/mpeg")
-    .set(".wav", "audio/wav")
-
-    .set(".mp4", "video/mp4")
-    .set(".webm", "video/webm")
+const contentHeaders = require("./content-headers.json");
+const contentHeaderMap = new Map(Object.entries(contentHeaders));
 
 // functions start here
 
