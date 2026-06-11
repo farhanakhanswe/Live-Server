@@ -5,19 +5,27 @@ const path = require("path");
 const mimeTypes = require("./mime-types.json");
 const fileReloadState = require("./fileReloadState");
 
-const contentType = "Content-Type";
+const CONTENT_TYPE = "Content-Type";
+const NOT_FOUND_404 = 404;
+
 const htmlExtension = ".html";
 const jsonExtension = ".json";
-const fileNotFoundStatusCode = 404;
-const fileNotFoundMsg = "File not found!";
-
 const checkIfFileChangedAPI = "/check-file-changes";
 
 // functions start here
 
 const setContentHeader = (ext, response) => {
     const type = mimeTypes[ext] || "application/octet-stream";
-    response.setHeader(contentType, mimeTypes[ext]);
+    response.setHeader(CONTENT_TYPE, type);
+}
+
+const serve404NotFound = (response) => {
+    response.statusCode = NOT_FOUND_404;
+    response.setHeader(CONTENT_TYPE, mimeTypes[htmlExtension]);
+
+    fs.readFile(`public/404.html`, (error, data) => {
+        response.end(data);
+    });
 }
 
 const serveFile = (filename, response) => {
@@ -25,8 +33,7 @@ const serveFile = (filename, response) => {
         if(!error){
             response.end(data); 
         }else{
-            response.statusCode = fileNotFoundStatusCode;
-            response.end(fileNotFoundMsg);
+            serve404NotFound(response);
         }
     });
 }
@@ -45,7 +52,7 @@ const server = http.createServer((request, response) => {
     console.log("ext" + path.extname(request.url));
 
     if(request.url === checkIfFileChangedAPI){
-        response.setHeader(contentType, mimeTypes[jsonExtension]);
+        response.setHeader(CONTENT_TYPE, mimeTypes[jsonExtension]);
 
         response.end(JSON.stringify({
             changed: fileReloadState.getHasFileChanged()
@@ -60,6 +67,8 @@ const server = http.createServer((request, response) => {
         const fileFormat = path.extname(request.url);
         setContentHeader(fileFormat, response);
         serveFile(request.url, response);
+    }else{
+        serve404NotFound(response); 
     }
 
 });
