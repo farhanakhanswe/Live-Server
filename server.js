@@ -47,6 +47,13 @@ const watchFiles = () => {
     });
 }
 
+const isSafePath = (requestPath) => {
+    const publicDir = path.resolve("public");
+    const requestedFile = path.resolve("public", requestPath);
+
+    return requestedFile.startsWith(publicDir);
+}
+
 const server = http.createServer((request, response) => {
     console.log(request.url);
     console.log("ext" + path.extname(request.url));
@@ -64,6 +71,12 @@ const server = http.createServer((request, response) => {
         setContentHeader(htmlExtension, response);
         serveFile("/index.html", response);
     }else if(path.extname(request.url) !== ""){
+
+        if (!isSafePath(request.url)) {
+            serve404NotFound(response);
+            return;
+        }
+
         const fileFormat = path.extname(request.url);
         setContentHeader(fileFormat, response);
         serveFile(request.url, response);
