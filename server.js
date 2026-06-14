@@ -4,6 +4,7 @@ const config = require("./config.json");
 const path = require("path");
 const mimeTypes = require("./mime-types.json");
 const fileReloadState = require("./fileReloadState");
+const { watchFiles } = require("./fileWatcher");
 
 const CONTENT_TYPE = "Content-Type";
 const NOT_FOUND_404 = 404;
@@ -38,14 +39,6 @@ const serveFile = (filename, response) => {
     });
 }
 
-const watchFiles = () => {
-    fs.watch("public", (eventType, filename) => {
-        console.log(eventType, filename);
-        if(eventType === "change"){
-            fileReloadState.setHasFileChanged(true);
-        }
-    });
-}
 
 const isSafePath = (requestPath) => {
     const publicDir = path.resolve("public");
