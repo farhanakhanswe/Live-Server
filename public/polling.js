@@ -1,4 +1,4 @@
-console.log("hello");
+console.log("from polling.js");
 
 const checkFileChange = () => {
     fetch("/check-file-changes")
