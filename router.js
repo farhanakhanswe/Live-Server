@@ -1,29 +1,30 @@
 const CONTENT_TYPE = "Content-Type";
 
 const fileReloadState = require("./fileReloadState");
+const mimeTypes = require("./mime-types.json");
 const { serveFile, serve404NotFound } = require("./fileServer");
+const path = require("path");
 
 const checkIfFileChangedAPI = "/check-file-changes";
 
-const mimeTypes = require("./mime-types.json");
-const applicatonOctetStream = "application/octet-stream";
+const applicatonOctetStreamStr = "application/octet-stream";
+const htmlExtensionStr = ".html";
+const jsonExtensionStr = ".json";
+const publicDirectoryStr = "public";
 
-const htmlExtension = ".html";
-const jsonExtension = ".json";
-
-const path = require("path");
+// functions start here
 
 const isSafePath = (requestPath) => {
-    const publicDir = path.resolve("public");
-    const requestedFile = path.resolve("public", "." + requestPath);
-    console.log("publicDir" + publicDir);
-    console.log(`requested file ${requestedFile}`);
+    const publicDir = path.resolve(publicDirectoryStr);
+    const requestedFile = path.resolve(publicDirectoryStr, "." + requestPath);
+    console.log("publicDir: " + publicDir);
+    console.log(`requested file: ${requestedFile}`);
 
     return requestedFile.startsWith(publicDir);
 }
 
 const setContentHeader = (ext, response) => {
-    const type = mimeTypes[ext] || applicatonOctetStream;
+    const type = mimeTypes[ext] || applicatonOctetStreamStr;
     response.setHeader(CONTENT_TYPE, type);
 }
 
@@ -32,8 +33,7 @@ const routeRequest = (request, response) => {
     console.log(`Extension: ${path.extname(request.url)}`);
 
     if(request.url === checkIfFileChangedAPI){
-        response.setHeader(CONTENT_TYPE, mimeTypes[jsonExtension]);
-
+        setContentHeader(jsonExtensionStr, response);
         response.end(JSON.stringify({
             changed: fileReloadState.getHasFileChanged()
         }));
@@ -41,13 +41,9 @@ const routeRequest = (request, response) => {
         fileReloadState.setHasFileChanged(false);
         return;
     }else if(request.url === "/"){
-        setContentHeader(htmlExtension, response);
+        setContentHeader(htmlExtensionStr, response);
         serveFile("/index.html", response);
-    }else if(path.extname(request.url) !== ""){
-        if (!isSafePath(request.url)) {
-            serve404NotFound(response);
-            return;
-        }
+    }else if(isSafePath(request.url)){
         const fileFormat = path.extname(request.url);
         setContentHeader(fileFormat, response);
         serveFile(request.url, response);
