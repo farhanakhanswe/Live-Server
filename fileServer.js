@@ -2,13 +2,14 @@ const fs = require("fs");
 const mimeTypes = require("./mime-types.json");
 const CONTENT_TYPE = "Content-Type";
 const NOT_FOUND_404 = 404;
+const NOT_FOUND_404_FILE_PATH = `public/404.html`;
 const htmlExtension = ".html";
 
 const serve404NotFound = (response) => {
     response.statusCode = NOT_FOUND_404;
     response.setHeader(CONTENT_TYPE, mimeTypes[htmlExtension]);
 
-    fs.readFile(`public/404.html`, (error, data) => {
+    fs.readFile(NOT_FOUND_404_FILE_PATH, (error, data) => {
         response.end(data);
     });
 }
