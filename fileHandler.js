@@ -16,11 +16,11 @@ const isSafePath = (requestPath) => {
 const fileHandler = (url, response) => {
     if(url === "/"){
         setContentHeader(htmlExtensionStr, response);
-        serveFile("/index.html", response);
+        serveFile("/index.html", htmlExtensionStr, response);
     }else if(isSafePath(url)){
-        const fileFormat = path.extname(url);
-        setContentHeader(fileFormat, response);
-        serveFile(url, response);
+        const fileExtension = path.extname(url);
+        setContentHeader(fileExtension, response);
+        serveFile(url, fileExtension, response);
     }else{
         serve404NotFound(response); 
     }

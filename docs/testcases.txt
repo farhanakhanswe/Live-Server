@@ -6,4 +6,5 @@ Hit the following paths and observe both the terminal and browser:
 (4) <baseurl>/404
 (5) <baseurl>/polling.js
 (6) <baseurl>/polling
-(3) <baseurl>/check-file-changes
+(7) <baseurl>/check-file-changes
+(8) <baseurl>/blank.html
