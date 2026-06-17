@@ -1,7 +1,7 @@
 const path = require("path");
 const fileReloadState = require("./fileReloadState");
 const { fileReloadStateAPIhandler } = require("./apiHandler");
-const mimeTypes = require("./mime-types.json");
+const mimeTypes = require("./mimeTypes.json");
 const { requestRules } = require("./requestRules");
 const checkIfFileChangedAPI = "/check-file-changes";
 const routesMap = new Map();
