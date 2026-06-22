@@ -11,8 +11,8 @@ routesMap.set(checkIfFileChangedAPI, fileReloadStateAPIhandler);
 
 // functions
 const routeRequest = (request, response) => {
-    console.log(`Request URL: ${request.url}`);
-    console.log(`Extension: ${path.extname(request.url)}`);
+    // console.log(`Request URL: ${request.url}`);
+    // console.log(`Extension: ${path.extname(request.url)}`);
 
     requestRules(routesMap, request.url, response);
 }

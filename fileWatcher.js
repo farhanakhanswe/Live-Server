@@ -4,7 +4,7 @@ const fileReloadState = require("./fileReloadState");
 const { shouldIgnore } = require("./public/ignore");
 
 const watchDirectory = (directoryPath) => {
-    console.log(`watching directory path: ${directoryPath}` );
+    // console.log(`watching directory path: ${directoryPath}` );
     
     fs.watch(directoryPath, (eventType, filename) => {
         if (!filename) return;
@@ -12,7 +12,7 @@ const watchDirectory = (directoryPath) => {
         const itemPath = path.join(directoryPath, filename);
         if (shouldIgnore(itemPath)) return;
 
-        console.log(`eventType: ${eventType} and fileName: ${filename}`);
+        // console.log(`eventType: ${eventType} and fileName: ${filename}`);
         if(eventType === "change"){
             fileReloadState.setHasFileChanged(true);
         }

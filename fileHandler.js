@@ -7,8 +7,8 @@ const { serveFile, serve404NotFound } = require("./fileServer");
 const isSafePath = (requestPath) => {
     const publicDir = path.resolve(publicDirectoryStr);
     const requestedFile = path.resolve(publicDirectoryStr, "." + requestPath);
-    console.log("publicDir: " + publicDir);
-    console.log(`requested file: ${requestedFile}`);
+    // console.log("publicDir: " + publicDir);
+    // console.log(`requested file: ${requestedFile}`);
 
     return requestedFile.startsWith(publicDir);
 }
