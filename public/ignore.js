@@ -1,7 +1,6 @@
 const path = require("path");
 
 const ignoreList = [
-    ".git"
 ];
 
 const shouldIgnore = (itemPath) => {
