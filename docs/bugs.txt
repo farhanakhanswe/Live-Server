@@ -1,0 +1,2 @@
+(1) BUG-1: When I load two files in two different tabs and make changes to both files,
+    sometimes, only one tab is getting updated.
