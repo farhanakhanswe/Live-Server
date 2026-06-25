@@ -8,3 +8,38 @@ Hit the following paths and observe both the terminal and browser:
 (6) <baseurl>/polling
 (7) <baseurl>/check-file-changes
 (8) <baseurl>/blank.html
+
+-----
+
+(9) Test BUG-1 from bugs.txt: Create two separate projects inside the public folder.
+
+    public/
+    ├── project1/
+    │   └── index.html
+    │
+    └── project2/
+        └── index.html
+
+    (i) Open project1/index.html in Tab 1.
+    (ii) Open project2/index.html in Tab 2.
+
+    Steps:
+
+    (i) Modify project1/index.html.
+    (ii) Verify only Tab 1 reloads.
+    (iii) Verify Tab 2 does NOT reload.
+
+    (iv) Modify project2/index.html.
+    (v) Verify only Tab 2 reloads.
+    (vi) Verify Tab 1 does NOT reload.
+
+    (vii) Repeat the above steps multiple times very quickly.
+
+    Expected Result:
+
+    - The correct tab reloads every time.
+    - The unrelated tab never reloads.
+    - No reload events are missed.
+
+
+
