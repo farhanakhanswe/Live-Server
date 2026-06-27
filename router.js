@@ -1,22 +1,22 @@
 const path = require("path");
-const fileReloadState = require("./fileReloadState");
-const { fileReloadStateAPIhandler } = require("./apiHandler");
-const mimeTypes = require("./mimeTypes.json");
 const { requestRules } = require("./requestRules");
-const checkIfFileChangedAPI = "/check-file-changes";
-const routesMap = new Map();
+const { filePathKeyReloadStateValueMap } = require("./filePathKeyReloadStateValueMap");
+const checkIfFileChangedAPISubstring = "/check-file-changes/filename=http://localhost:3000";
 
-// routes
-routesMap.set(checkIfFileChangedAPI, fileReloadStateAPIhandler);
-
-// functions
-const routeRequest = (request, response) => {
-    // console.log(`Request URL: ${request.url}`);
+const router = (request, response) => {
+    console.log(`Request URL: ${request.url}`);
     // console.log(`Extension: ${path.extname(request.url)}`);
 
-    requestRules(routesMap, request.url, response);
+    if(!filePathKeyReloadStateValueMap.has(request.url) &&  !(request.url.includes(checkIfFileChangedAPISubstring))){
+        if(request.url === "/"){
+           filePathKeyReloadStateValueMap.set("/index.html", false);
+        }else{
+           filePathKeyReloadStateValueMap.set(request.url, false);
+        }
+    }
+    requestRules(request.url, response);
 }
     
 module.exports = {
-    routeRequest
+    router
 }

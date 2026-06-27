@@ -1,8 +1,8 @@
 const path = require("path");
 const htmlExtensionStr = ".html";
 const publicDirectoryStr = "public"
-const { setContentHeader } = require("./setContentHeader");
-const { serveFile, serve404NotFound } = require("./fileServer");
+const { setContentHeader } = require("../setContentHeader");
+const { serveFile, serve404NotFound } = require("../fileServer");
 
 const isSafePath = (requestPath) => {
     const publicDir = path.resolve(publicDirectoryStr);

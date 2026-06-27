@@ -14,7 +14,9 @@ A lightweight Live Server Development Tool built using Vanilla JS and Node.js ma
 
 Optional:
 
-(1) Ignore files: You can ignore files that will NOT trigger browser reload when they change. For example: ".git". You have to add that inside the "ignoreList" array inside the public/ignore.js file.
+(1) Ignore files: You can ignore files that will NOT trigger browser reload when they change. For example: ".git". You have to add that inside the "ignoreList" array inside the public/filesToIgnore.js file.
+
+i need to give some examples 
 
 ### Possible Issue:
 
