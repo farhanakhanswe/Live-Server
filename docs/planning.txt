@@ -1,0 +1,55 @@
+# Preparation for v1.0.0:
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+* Initial version and its issues *
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Initially, I built a small version that ended up only supporting one HTML file that's loaded in one browser tab.
+When I loaded two different HTML files in two tabs and made changes to them almost at the same time, I noticed
+the following:
+
+    (Issue: 1) Sometimes, only one of the tabs reload, when both should instead
+    (Issue: 2) Sometimes, the wrong tab reloads
+    
+(Issue: 1) 
+This issue was happening because I was using a global reload state flag to detect file change. The polling scripts were injected into all the tabs' HTML files,
+so each tab's polling script was calling the Browser Reload API every 1 second. Now, let's say two tabs are calling this API almost at the same time. 
+After the first tab's API call, the first tab reloads and the reload state becomes false, so right after that, when the second API call checks if any file had changed, 
+false reload state was returned and hence, the second tab did not reload.
+
+(Issue: 2)
+Another issue is that the system was not properly keeping track of which url to reload when the reload state flag turned to true. Each tab is running its own
+polling script which was calling the Browser Reload API. So, regardless of which tab, when the system has the reload state set as true, the tab that called the API first
+was getting reloaded.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+* Improvement planning*
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+(Plan: 1) -> Attempted
+I, then decided to create a map called filePathKeyReloadStateValueMap to map HTML file path to their reload state so that the right file path reloads when there's a change.
+By doing this, I was able to reload multiple HTML files hosted in multiple tabs within the same browser.
+After attempting this plan, came the next challenge; the JS/CSS files that are inside those HTML files were not reloading when changes were made to them.
+
+(Plan: 2) -> Ongoing
+I decided that I will only keep one dependency map called "htmlDependenciesMap" where the key will the file and the value will the list of other files that's using it.
+If the key is an HTML filepath then the value will a list containing only this HTML filepath. But, if the key is CSS/JSS filepath then the value will be a list of all the HTML
+files that are using it.
+Also, I will use a SET to keep track of HTML files that need to be reloaded. I'm using SET to avoid duplicate entries. If I used a queue, let's say 
+one HTML file changed 10 times, then there would be 10 entries in the queue and the brower tab will have to reload 10 times. I have to write extra logic
+for this queue so that duplicates do not occur. So, it's easier to use JavaScript SET object, since it does not accept duplicates.
+
+So, now the flow would be:
+    (a) An HTML file loads in a browser tab and the polling script starts calling the API every 1 second
+    (b) The same HTML file or its CSS/JS dependency files change, so the system detects that and checks if this file exists in the htmlDependenciesMap. 
+        If it does, the system will collect its list of HTML files from the map and add it to the SET. 
+    (c) The Browser Reload API endpoint receives the URL from the param, and based on that, the system will check if that file exists in the SET. 
+        If it does, that browser tab will reload.
+
+Next, I thought about how do I collect all the JS/CSS files that the HTML file is loading. I decided that I will use the document.getElementByTagName() DOM method,
+to fetch all the scripts and links in the HTML file, and then send that list of files to a new API called HTML Dependencies Mapping API. It will check if the files exist
+inside the public root directory or in any of its sub directories. If it does, it will be added to the htmlDependenciesMap.
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+* Future Plan *
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+I need to improve the reloading process in the future. Polling script is calling the API every second, now if there are multiple tabs, each of the tab will have 
+its own polling script. So, hundreds of API calls will be made in a short time which could cause browser reload delay.
