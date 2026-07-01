@@ -6,50 +6,111 @@ Initially, I built a small version that ended up only supporting one HTML file t
 When I loaded two different HTML files in two tabs and made changes to them almost at the same time, I noticed
 the following:
 
-    (Issue: 1) Sometimes, only one of the tabs reload, when both should instead
-    (Issue: 2) Sometimes, the wrong tab reloads
+    (Issue: 1) Sometimes, only one of the tabs reloaded, when both should've instead
+    (Issue: 2) Sometimes, the wrong tab reloaded
     
 (Issue: 1) 
-This issue was happening because I was using a global reload state flag to detect file change. The polling scripts were injected into all the tabs' HTML files,
-so each tab's polling script was calling the Browser Reload API every 1 second. Now, let's say two tabs are calling this API almost at the same time. 
-After the first tab's API call, the first tab reloads and the reload state becomes false, so right after that, when the second API call checks if any file had changed, 
-false reload state was returned and hence, the second tab did not reload.
+This issue was happening because I was using a global reload state flag to detect file change. The polling scripts
+were injected into all the tabs' HTML files, so each tab's polling script was calling the Browser Reload API every
+1 second. Now, let's say two tabs are calling this API almost at the same time. After the first tab's API call, 
+the first tab reloads and the reload state becomes false, so right after that, when the second API call checks 
+if any file had changed, false reload state was returned and hence, the second tab did not reload.
 
 (Issue: 2)
-Another issue is that the system was not properly keeping track of which url to reload when the reload state flag turned to true. Each tab is running its own
-polling script which was calling the Browser Reload API. So, regardless of which tab, when the system has the reload state set as true, the tab that called the API first
-was getting reloaded.
+Another issue is that the system was not properly keeping track of which file to reload when the reload state flag
+turned to true. Each tab is running its own polling script which was calling the Browser Reload API. So, regardless 
+of which tab, when the system has the reload state set as true, the tab that called the API first was getting 
+reloaded.
 
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 * Improvement planning*
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 (Plan: 1) -> Attempted
-I, then decided to create a map called filePathKeyReloadStateValueMap to map HTML file path to their reload state so that the right file path reloads when there's a change.
-By doing this, I was able to reload multiple HTML files hosted in multiple tabs within the same browser.
-After attempting this plan, came the next challenge; the JS/CSS files that are inside those HTML files were not reloading when changes were made to them.
+I then decided to create a map called filePathKeyReloadStateValueMap to map HTML file path to their reload state
+so that the right file path reloads when there's a change. By doing this, I was able to reload multiple HTML files
+hosted in multiple tabs within the same browser. After attempting this plan, came the next challenge; the JS/CSS 
+files that are inside those HTML files were not reloading when changes were made to them.
 
 (Plan: 2) -> Ongoing
-I decided that I will only keep one dependency map called "htmlDependenciesMap" where the key will the file and the value will the list of other files that's using it.
-If the key is an HTML filepath then the value will a list containing only this HTML filepath. But, if the key is CSS/JSS filepath then the value will be a list of all the HTML
-files that are using it.
-Also, I will use a SET to keep track of HTML files that need to be reloaded. I'm using SET to avoid duplicate entries. If I used a queue, let's say 
-one HTML file changed 10 times, then there would be 10 entries in the queue and the brower tab will have to reload 10 times. I have to write extra logic
-for this queue so that duplicates do not occur. So, it's easier to use JavaScript SET object, since it does not accept duplicates.
+
+* Date: 29th of June, 2026 *
+------------------------------
+I decided that I will only keep one dependency map called "htmlDependenciesMap" where the key will the file and 
+the value will the list of other files that's using it. If the key is an HTML filepath then the value will a list 
+containing only this HTML filepath. But, if the key is CSS/JSS filepath then the value will be a list of all the 
+HTML files that are using it.
+Also, I will use a SET to keep track of HTML files that need to be reloaded. I'm using SET to avoid duplicate 
+entries. If I used a queue, let's say one HTML file changed 10 times, then there would be 10 entries in the queue
+and the brower tab will have to reload 10 times. I have to write extra logic for this queue so that duplicates 
+do not occur. So, it's easier to use JavaScript SET object, since it does not accept duplicates. Also, a queue
+follows FIFO which is First-In-First-Out which is not necessary for this server. It's much easier to use a SET 
+that will not follow any order to deliver which tab should refresh first. 
 
 So, now the flow would be:
-    (a) An HTML file loads in a browser tab and the polling script starts calling the API every 1 second
-    (b) The same HTML file or its CSS/JS dependency files change, so the system detects that and checks if this file exists in the htmlDependenciesMap. 
+    (a) An HTML file loads in a browser tab and the polling script starts calling the Browser Reload API every 
+        1 second.
+    (b) The same HTML file or its CSS/JS dependency files change, so the system detects that and checks if this
+        file exists in the htmlDependenciesMap. 
         If it does, the system will collect its list of HTML files from the map and add it to the SET. 
-    (c) The Browser Reload API endpoint receives the URL from the param, and based on that, the system will check if that file exists in the SET. 
-        If it does, that browser tab will reload.
+    (c) The Browser Reload API endpoint receives the URL from the query param, and based on that, the system
+        will check if that file exists in the SET. If it does, that browser tab will reload.
 
-Next, I thought about how do I collect all the JS/CSS files that the HTML file is loading. I decided that I will use the document.getElementByTagName() DOM method,
-to fetch all the scripts and links in the HTML file, and then send that list of files to a new API called HTML Dependencies Mapping API. It will check if the files exist
-inside the public root directory or in any of its sub directories. If it does, it will be added to the htmlDependenciesMap.
+Next, I thought about how do I collect all the JS/CSS files that the HTML file is loading. I decided that I will 
+use the document.getElementsByTagName() DOM method, to fetch all the scripts and links in the HTML file, and then 
+send that list of files to a new API called HTML Dependencies Mapping API. The API will check if the files 
+exist inside the public root directory or in any of its sub directories. If it does, it will be added to the
+htmlDependenciesMap.
+
+Now, I'm thinking what if I have an HTML file and it contains 3 JS files. htmlDependenciesMap will map these 3 
+entries to this HTML file. Now, let's say, there's a change made to either of the JS files and before the tab reloads,
+if I can quickly manage to remove all the script tags from the HTML file, will it cause any issue? It should not;
+because for any change in the HTML file, the tab should reload.
+
+Now, in this scenario, should I keep the stale JS files in the htmlDependenciesMap. The lookup time in the JS Map
+object is O(1). So, if I do keep the files, it will be okay since looking for any file in this map will have a
+time complexity of O(1), and realistically speaking, we don't often remove JS files from HTML files. Also, 
+when the user will close the server and restart again, the htmlDependenciesMap will start fresh.
+
+If I do decide to delete the entries or only remove the HTML filepath from each of these entries' HTML list, I 
+have to do the following:
+    (1) Look for the CSS/JS filepath entry in the map and loop over its HTML list, and then remove the specific 
+        HTML file from the list
+    (2) If the JS filepath entry only has one HTML file in its list, then remove the JS filepath entry from the map 
+
+Deletion requires extra effort and we don't often remove scripts or links from HTML files, and this map will 
+start fresh everytime we restart the server. So, I'm deciding on this trade off to keeping the stale entries. 
+
+* Date: 30th of June, 2026 *
+------------------------------
+Now, I'm thinking how often do I need to call the HTML Dependencies Mapping API. Once the HTML file loads and 
+the Mapping API is called once, the CSS and JS files will mapped to the HTML file in the server.
+But, what if I add a new link or script tag inside the HTML file later. 
+Come to think of it, the tab will reload everytime there's a change in the HTML file anyway, and everytime the tab reloads, the Mapping API
+will be called once so that should map the new JS/CSS filepaths in the map.
+
+* Date: 1st of July, 2026 *
+------------------------------
+So, now the flow looks like:
+
+(1) HTML file loads in the browser.
+(2) The postHTMLTagData.js script maps the HTML/JS/CSS files to the loaded HTML file and sends the data to the
+    HTML Dependencies Mapping API. This API will be called only once for each reload.
+(3) The polling.js script calls the Browser Reload API every 1 second to check if any HTML needs to be reloaded
+    and then reloads it.
+(4) When the HTML Dependencies Mapping API receives data from client, it will receive the
+    brower url, the filepaths for CSS and JS files. From the URL, we can get the HTML file loaded and then
+    we can map the CSS and JS files to the HTML file in the htmlDependenciesMap map.
+(5) The file watcher in the backend will observe if any files have changed. If a file changes, then it will check 
+    if that file exists in the htmlDependenciesMap map. If it does exist, it will push the HTML filepath to the SET.
+(6) Now, when the polling.js calls the Browser Reload API, it will pass the browser url in the query param.
+    The server will get the HTML filepath from the URL and then check if it exists in the SET. If it does,
+    this HTML filepath will be removed from the SET and the related browser tab will reload.
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 * Future Plan *
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-I need to improve the reloading process in the future. Polling script is calling the API every second, now if there are multiple tabs, each of the tab will have 
-its own polling script. So, hundreds of API calls will be made in a short time which could cause browser reload delay.
+I need to improve the reloading process in the future. Polling script is calling the API every second, now if 
+there are multiple tabs, each of the tab will have its own polling script. So, hundreds of API calls will be made
+in a short time which could cause browser reload delay.
+

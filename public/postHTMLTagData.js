@@ -50,7 +50,6 @@ async function postHTMLTagData(){
     }
 }
 
-setInterval(postHTMLTagData, 2000);
 
 
 
