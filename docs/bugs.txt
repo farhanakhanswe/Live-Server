@@ -1,2 +1,11 @@
-(1) BUG-1: When I load two files in two different tabs and make changes to both files,
+(1) BUG-1: When I load two HTML files in two tabs and make changes to both files,
     sometimes, only one tab is getting updated.
+
+(2) BUG-2: When I load two HTML files in two tabs and I make changes in the first file
+    that's loaded in the first tab, the second file that's loaded in the second tab reloads instead.
+
+*FIX*: BUG-1 and BUG-2 are fixed after introducing the mapping of each loaded file with their reload state.
+
+(3) BUG-3: After fixing BUG1 and BUG2, there's now a new issue. Although the HTML files are loading fine,
+    when I make changes inside the JS/CSS files that are used by these HTML files, browser reload does
+    not get triggered.
